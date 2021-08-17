@@ -1,0 +1,48 @@
+{
+  "name": "@aptoma/dre4f-live-preview",
+  "version": "1.0.0",
+  "description": "",
+  "repository": {
+    "url": "https://github.com/aptoma/dre4f-live-preview",
+    "type": "git"
+  },
+  "scripts": {
+    "start": "node server/index.js"
+  },
+  "keywords": [],
+  "author": "Gunnar Lium <gunnar@aptoma.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "prettier": "^2.1.2",
+    "prettier-stylelint": "^0.4.2",
+    "stylelint": "^13.8.0",
+    "stylelint-config-standard": "^20.0.0"
+  },
+  "eslintConfig": {
+    "extends": [
+      "prettier"
+    ],
+    "env": {
+      "node": true,
+      "es6": true
+    },
+    "parserOptions": {
+      "ecmaVersion": 2020
+    }
+  },
+  "prettier": {
+    "printWidth": 120,
+    "singleQuote": true,
+    "bracketSpacing": false,
+    "arrowParens": "always",
+    "trailingComma": "none"
+  },
+  "dependencies": {
+    "@brillout/fetch": "^0.2.1",
+    "@hapi/boom": "^9.1.3",
+    "@hapi/hapi": "^20.0.1",
+    "@hapi/inert": "^6.0.3",
+    "@hapi/joi": "^17.1.1",
+    "jwt-decode": "^2.2.0"
+  }
+}
