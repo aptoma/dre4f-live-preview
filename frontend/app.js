@@ -40,6 +40,10 @@ function createView() {
 			connectionStatusNode.innerHTML = state.connectionStatus;
 			statusNode.innerHTML = state.status;
 			dataNode.innerHTML = state.data
+		},
+		highlightItem: (itemId) => {
+			// const itemEl = someCodeToFindItemById(itemId);
+			// itemEl.scrollIntoView({behavior: 'auto', block: 'center', inline: 'center'});
 		}
 	};
 }
@@ -56,7 +60,7 @@ async function init(firebase, config, firebaseToken, {clientId, userId}, edition
 		data: 'Waiting for data …'
 	};
 
-	let draftRef, isSaving, saveTimeout;
+	let draftRef, activeItemRef, isSaving, saveTimeout;
 
 	const actions = {
 		missingConfig: () => {
@@ -141,6 +145,22 @@ async function init(firebase, config, firebaseToken, {clientId, userId}, edition
 			}
 			return renderPreview();
 		});
+
+		document.addEventListener('click', (event) => {
+			const frontItem = event.target.closest('.dre-item');
+
+			if (frontItem && activeItemRef) {
+				// Assume id is set as data-id="<id>"
+				activeItemRef.set(frontItem.dataset.id);
+				event.preventDefault();
+			}
+		});
+
+		activeItemRef = firebase.database().ref(`/accounts/${clientId}/editions/${editionId}/activeItem/${userId}`);
+		activeItemRef.on('value', (snapshot) => {
+			actions.setActiveItem(snapshot.val());
+			selectActiveItem();
+		});
 	}
 
 	async function renderPreview() {
@@ -155,6 +175,10 @@ async function init(firebase, config, firebaseToken, {clientId, userId}, edition
 		}
 
 		actions.setData(viewData);
+	}
+
+	function selectActiveItem() {
+		view.highlightItem(state.activeItemId);
 	}
 }
 
