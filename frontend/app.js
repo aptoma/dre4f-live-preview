@@ -44,6 +44,10 @@ function createView() {
 		highlightItem: (itemId) => {
 			// const itemEl = someCodeToFindItemById(itemId);
 			// itemEl.scrollIntoView({behavior: 'auto', block: 'center', inline: 'center'});
+		},
+		highlightGroup: (groupId) => {
+			// const groupEl = someCodeToFindGroupById(groupId);
+			// groupEl.scrollIntoView({behavior: 'auto', block: 'center', inline: 'center'});
 		}
 	};
 }
@@ -60,7 +64,7 @@ async function init(firebase, config, firebaseToken, {clientId, userId}, edition
 		data: 'Waiting for data …'
 	};
 
-	let draftRef, activeItemRef, isSaving, saveTimeout;
+	let draftRef, activeItemRef, uiEventsRef, isSaving, saveTimeout;
 
 	const actions = {
 		missingConfig: () => {
@@ -103,6 +107,14 @@ async function init(firebase, config, firebaseToken, {clientId, userId}, edition
 			state.status = '·';
 			state.loading = false;
 			render();
+		},
+
+		setActiveItem: (itemId) => {
+			state.activeItemId = itemId;
+		},
+
+		setActiveGroup: (groupId) => {
+			state.activeGroupId = groupId;
 		},
 
 		setDraft: (draft) => {
@@ -161,6 +173,34 @@ async function init(firebase, config, firebaseToken, {clientId, userId}, edition
 			actions.setActiveItem(snapshot.val());
 			selectActiveItem();
 		});
+
+		// NOTE: uiEvents are only available when using the regular-beta edit mode
+		uiEventsRef = firebase
+			.database()
+			.ref(`/accounts/${clientId}/editions/${editionId}/uiEvents/${userId}`)
+			// The list of events are reset whenever the edition is closed, but since the edition can be open for a long,
+			// time and trigger multiple reloads of the preview, you should only listen to last event, unless you have a
+			// very specific reason to need more/all events
+			.limitToLast(1);
+		uiEventsRef.on('child_added', (snapshot) => {
+			const [event, type, id] = snapshot.val().split(':');
+			if (event !== 'click') {
+				return;
+			}
+			// This event is likely to often be triggered at the same time as activeItemRef, but will also trigger
+			// on clicks when the item is already active, and will not trigger if active item is selected through some
+			// other means than clicking the item in the edition list. It's recommended to listen to both events,
+			// but to dedupe any heavy processing the event might trigger in your system
+			if (type === 'item') {
+				actions.setActiveItem(id);
+				selectActiveItem();
+				return;
+			}
+			if (type === 'group') {
+				actions.setActiveGroup(id);
+				selectActiveGroup();
+			}
+		});
 	}
 
 	async function renderPreview() {
@@ -179,6 +219,10 @@ async function init(firebase, config, firebaseToken, {clientId, userId}, edition
 
 	function selectActiveItem() {
 		view.highlightItem(state.activeItemId);
+	}
+
+	function selectActiveGroup() {
+		view.highlightGroup(state.activeGroupId);
 	}
 }
 
