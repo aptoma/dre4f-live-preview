@@ -12,21 +12,7 @@ preview url configured in DrEdition.
 
 Run `npm install` and `npm start`.
 
-In DrEdition, make sure your edition content schema has at least this property:
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "livePreview": {
-      "title": "Enable live preview features?",
-      "type": "boolean",
-      "default": true
-    }
-  }
-}
-```
-
+In DrEdition, you need to check the “Enable live preview data sync for editions” in the product settings.
 This is needed to make DrEdition sync data with the live preview server.
 
 Configure the product in DrEdition with a preview url like this.
