@@ -85,38 +85,34 @@ async function previewHandler(req) {
 		const firebaseConfig = await dredition.getFirebaseConfig(userId);
 
 		return `<!DOCTYPE html>
-	<html lang="en">
-	  <head>
-		<meta charset="UTF-8">
-		<title>DrE Live Preview</title>
-	  </head>
-	  <body>
-	  <script>
-		  window.firebaseConfig = ${JSON.stringify(firebaseConfig)};
-	  </script>
-	  <script src="https://www.gstatic.com/firebasejs/8.9.1/firebase-app.js"></script>
-	  <script src="https://www.gstatic.com/firebasejs/8.9.1/firebase-auth.js"></script>
-	  <script src="https://www.gstatic.com/firebasejs/8.9.1/firebase-database.js"></script>
-	  <script src="/js/app.js"></script>
-	  </body>
-	</html>`;
+<html lang="en">
+  <head>
+<meta charset="UTF-8">
+<title>DrE Live Preview</title>
+  </head>
+  <body>
+  <script>
+  window.firebaseConfig = ${JSON.stringify(firebaseConfig)};
+  </script>
+  <script type="module" src="/js/app.js"></script>
+  </body>
+</html>`;
 	} catch (err) {
 		return `<!DOCTYPE html>
-	<html lang="en">
-	  <head>
-		<meta charset="UTF-8">
-		<title>DrE Error</title>
-		<link rel="stylesheet" href="/dist/styles/styles.css"/>
-	  </head>
-	  <body>
-	  <div class="frontpage">
-		<h1>Error fetching data.</h1>
-		<p>Please reload the preview, or contact support if the problem persists.</p>
-		<h2>Technical details:</h2>
-		<pre><code>${err.message}</code></pre>
-	  </div>
-	  </body>
-	</html>`;
+<html lang="en">
+  <head>
+<meta charset="UTF-8">
+<title>DrE Error</title>
+<link rel="stylesheet" href="/dist/styles/styles.css"/>
+  </head>
+  <body>
+  <div class="frontpage">
+<h1>Error fetching data.</h1>
+<p>Please reload the preview, or contact support if the problem persists.</p>
+<h2>Technical details:</h2>
+<pre><code>${err.message}</code></pre>
+  </div>
+  </body>
+</html>`;
 	}
 }
-

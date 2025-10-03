@@ -1,4 +1,7 @@
-/* global firebase*/
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+import { getDatabase, ref, onValue, query, limitToLast, onChildAdded, set } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js";
+
 window.onload = () => {
 	(async (firebaseConfig) => {
 		const searchParams = new URLSearchParams(document.location.search);
@@ -9,7 +12,7 @@ window.onload = () => {
 			return;
 		}
 
-		await init(firebase, firebaseConfig.config, firebaseConfig.token, firebaseConfig.data, editionId);
+		await init(firebaseConfig.config, firebaseConfig.token, firebaseConfig.data, editionId);
 	})(window.firebaseConfig, window.context);
 };
 
@@ -39,7 +42,7 @@ function createView() {
 			bodyNode.classList.toggle('realtime__connection-failure', state.connectionFailure);
 			connectionStatusNode.innerHTML = state.connectionStatus;
 			statusNode.innerHTML = state.status;
-			dataNode.innerHTML = state.data
+			dataNode.innerHTML = state.data;
 		},
 		highlightItem: (itemId) => {
 			// const itemEl = someCodeToFindItemById(itemId);
@@ -52,7 +55,7 @@ function createView() {
 	};
 }
 
-async function init(firebase, config, firebaseToken, {clientId, userId}, editionId) {
+async function init(config, firebaseToken, {clientId, userId}, editionId) {
 	const view = createView();
 	const state = {
 		loading: true,
@@ -119,7 +122,7 @@ async function init(firebase, config, firebaseToken, {clientId, userId}, edition
 
 		setDraft: (draft) => {
 			state.draft = draft;
-		},
+		}
 	};
 
 	if (!(config && firebaseToken)) {
@@ -136,10 +139,12 @@ async function init(firebase, config, firebaseToken, {clientId, userId}, edition
 	async function initFirebase(config, customToken) {
 		actions.connecting();
 
-		firebase.initializeApp(config);
+		const app = initializeApp(config);
+		const auth = getAuth(app);
+		const database = getDatabase(app);
 
 		try {
-			await firebase.auth().signInWithCustomToken(customToken);
+			await signInWithCustomToken(auth, customToken);
 		} catch (err) {
 			console.log(err);
 			actions.connectionFailure(err);
@@ -148,8 +153,8 @@ async function init(firebase, config, firebaseToken, {clientId, userId}, edition
 
 		actions.connected();
 
-		draftRef = firebase.database().ref(`/accounts/${clientId}/editions/${editionId}/regularDrafts/${userId}`);
-		draftRef.on('value', async (snapshot) => {
+		draftRef = ref(database, `/accounts/${clientId}/editions/${editionId}/regularDrafts/${userId}`);
+		onValue(draftRef, async (snapshot) => {
 			actions.setDraft(snapshot.val());
 			isSaving = false;
 			if (saveTimeout) {
@@ -163,26 +168,25 @@ async function init(firebase, config, firebaseToken, {clientId, userId}, edition
 
 			if (frontItem && activeItemRef) {
 				// Assume id is set as data-id="<id>"
-				activeItemRef.set(frontItem.dataset.id);
+				set(activeItemRef, frontItem.dataset.id);
 				event.preventDefault();
 			}
 		});
 
-		activeItemRef = firebase.database().ref(`/accounts/${clientId}/editions/${editionId}/activeItem/${userId}`);
-		activeItemRef.on('value', (snapshot) => {
+		activeItemRef = ref(database, `/accounts/${clientId}/editions/${editionId}/activeItem/${userId}`);
+		onValue(activeItemRef, (snapshot) => {
 			actions.setActiveItem(snapshot.val());
 			selectActiveItem();
 		});
 
 		// NOTE: uiEvents are only available when using the regular-beta edit mode
-		uiEventsRef = firebase
-			.database()
-			.ref(`/accounts/${clientId}/editions/${editionId}/uiEvents/${userId}`)
+		const uiEventsRefBase = ref(database, `/accounts/${clientId}/editions/${editionId}/uiEvents/${userId}`);
+		uiEventsRef = query(uiEventsRefBase,
 			// The list of events are reset whenever the edition is closed, but since the edition can be open for a long,
 			// time and trigger multiple reloads of the preview, you should only listen to last event, unless you have a
 			// very specific reason to need more/all events
-			.limitToLast(1);
-		uiEventsRef.on('child_added', (snapshot) => {
+			limitToLast(1));
+		onChildAdded(uiEventsRef, (snapshot) => {
 			const [event, type, id] = snapshot.val().split(':');
 			if (event !== 'click') {
 				return;
