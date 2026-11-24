@@ -7,7 +7,7 @@ for the edition. You can use this as a basis for creating a more sophisticated l
 Setup
 ============
 
-Copy config.example.js to config.js, an optionally define an API key and user id. These can also be provided in the
+Copy config.example.js to server/config.js, an optionally define an API key and user id. These can also be provided in the
 preview url configured in DrEdition.
 
 Run `npm install` and `npm start`.
